@@ -10,30 +10,58 @@ import {
   Code2, 
   BookOpen, 
   Shield, 
-  Settings,
   Menu,
   X,
-  Radio
+  Radio,
+  User,
+  LogOut
 } from "lucide-react";
 import { useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
 import tamvLogo from "@/assets/tamv-logo.png";
+
+// Import auth context conditionally to avoid errors on public pages
+let useAuth: () => { user: any; profile: any; signOut: () => Promise<void> };
+try {
+  useAuth = require("@/contexts/AuthContext").useAuth;
+} catch {
+  useAuth = () => ({ user: null, profile: null, signOut: async () => {} });
+}
 
 const navigation = [
   { name: "Inicio", href: "/", icon: Home },
   { name: "Feed", href: "/feed", icon: Radio },
   { name: "Comunidad", href: "/community", icon: Users },
-  { name: "Chats", href: "/chats", icon: MessageCircle },
   { name: "Lives", href: "/lives", icon: Video },
   { name: "Isabella AI", href: "/isabella", icon: Sparkles },
   { name: "DreamSpaces", href: "/dreamspaces", icon: Blocks },
-  { name: "Hub Devs", href: "/hub-devs", icon: Code2 },
-  { name: "BookPI", href: "/bookpi", icon: BookOpen },
-  { name: "Blockchain MSR", href: "/blockchain", icon: Shield },
 ];
 
 export function Navbar() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  let user = null;
+  let profile = null;
+  let signOut = async () => {};
+  
+  try {
+    const auth = useAuth();
+    user = auth.user;
+    profile = auth.profile;
+    signOut = auth.signOut;
+  } catch {
+    // Auth context not available
+  }
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-border/50">
@@ -54,7 +82,7 @@ export function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-1">
-            {navigation.slice(0, 6).map((item) => {
+            {navigation.map((item) => {
               const isActive = location.pathname === item.href;
               return (
                 <Link
@@ -76,18 +104,54 @@ export function Navbar() {
 
           {/* Right side actions */}
           <div className="flex items-center gap-3">
-            <Link 
-              to="/auth" 
-              className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-foreground hover:bg-muted transition-colors"
-            >
-              Iniciar Sesión
-            </Link>
-            <Link 
-              to="/auth?mode=register" 
-              className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20"
-            >
-              Registrarse
-            </Link>
+            {user ? (
+              <>
+                <NotificationDropdown />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                      <Avatar className="h-9 w-9">
+                        <AvatarImage src={profile?.avatar_url || undefined} />
+                        <AvatarFallback>{profile?.display_name?.[0] || user.email?.[0]?.toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <div className="px-2 py-1.5">
+                      <p className="text-sm font-medium">{profile?.display_name || 'Usuario'}</p>
+                      <p className="text-xs text-muted-foreground">@{profile?.username}</p>
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/profile" className="cursor-pointer">
+                        <User className="h-4 w-4 mr-2" />
+                        Mi Perfil
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={signOut} className="text-destructive cursor-pointer">
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Cerrar Sesión
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            ) : (
+              <>
+                <Link 
+                  to="/auth" 
+                  className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                >
+                  Iniciar Sesión
+                </Link>
+                <Link 
+                  to="/auth?mode=register" 
+                  className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20"
+                >
+                  Registrarse
+                </Link>
+              </>
+            )}
             
             {/* Mobile menu button */}
             <button
