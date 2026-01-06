@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import { MainLayout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Heart, 
@@ -12,64 +13,25 @@ import {
   MoreHorizontal, 
   Image as ImageIcon, 
   Video, 
-  Smile, 
   Send,
   TrendingUp,
   Users,
-  Radio
+  Radio,
+  Loader2,
+  X,
+  Trash2
 } from "lucide-react";
-
-// Mock data for feed
-const posts = [
-  {
-    id: 1,
-    author: {
-      name: "María García",
-      username: "@mariagarcia",
-      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
-      verified: true,
-    },
-    content: "¡Acabo de crear mi primer DreamSpace! La experiencia inmersiva es increíble. El audio 3D con KAOS te transporta a otro mundo. 🌟✨",
-    image: "https://images.unsplash.com/photo-1614850715649-1d0106293bd1?w=800",
-    likes: 234,
-    comments: 45,
-    shares: 12,
-    timestamp: "hace 2h",
-    isLiked: false,
-  },
-  {
-    id: 2,
-    author: {
-      name: "Carlos Mendoza",
-      username: "@carlosmendoza",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
-      verified: false,
-    },
-    content: "Explorando las APIs del Hub Devs. La documentación está muy completa y la integración con Blockchain MSR es elegante. Pronto comparto mi proyecto. 🚀",
-    image: null,
-    likes: 89,
-    comments: 23,
-    shares: 5,
-    timestamp: "hace 4h",
-    isLiked: true,
-  },
-  {
-    id: 3,
-    author: {
-      name: "Ana Villaseñor",
-      username: "@anavillase",
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150",
-      verified: true,
-    },
-    content: "Live esta noche a las 9PM! Vamos a hablar sobre creatividad digital y cómo Isabella AI puede potenciar tu proceso creativo. ¡No se lo pierdan! 🎥",
-    image: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=800",
-    likes: 456,
-    comments: 78,
-    shares: 34,
-    timestamp: "hace 6h",
-    isLiked: false,
-  },
-];
+import { useAuth } from "@/contexts/AuthContext";
+import { usePosts } from "@/hooks/usePosts";
+import { useFileUpload } from "@/hooks/useFileUpload";
+import { formatDistanceToNow } from "date-fns";
+import { es } from "date-fns/locale";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const trendingTopics = [
   { tag: "#DreamSpaces", posts: "12.5K" },
@@ -86,15 +48,56 @@ const suggestedUsers = [
 ];
 
 export default function FeedPage() {
-  const [newPost, setNewPost] = useState("");
-  const [likedPosts, setLikedPosts] = useState<number[]>([2]);
+  const { user, profile } = useAuth();
+  const { posts, loading, likedPosts, createPost, toggleLike, deletePost } = usePosts();
+  const { uploadMultiple, uploading } = useFileUpload();
+  const [newPostContent, setNewPostContent] = useState("");
+  const [mediaPreview, setMediaPreview] = useState<string[]>([]);
+  const [mediaFiles, setMediaFiles] = useState<File[]>([]);
+  const [isPosting, setIsPosting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const toggleLike = (postId: number) => {
-    setLikedPosts(prev => 
-      prev.includes(postId) 
-        ? prev.filter(id => id !== postId)
-        : [...prev, postId]
-    );
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    // Preview
+    const previews = files.map(file => URL.createObjectURL(file));
+    setMediaPreview(prev => [...prev, ...previews]);
+    setMediaFiles(prev => [...prev, ...files]);
+  };
+
+  const removeMedia = (index: number) => {
+    URL.revokeObjectURL(mediaPreview[index]);
+    setMediaPreview(prev => prev.filter((_, i) => i !== index));
+    setMediaFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handlePost = async () => {
+    if (!newPostContent.trim() && mediaFiles.length === 0) return;
+
+    setIsPosting(true);
+
+    try {
+      let mediaUrls: string[] = [];
+      
+      if (mediaFiles.length > 0) {
+        const uploads = await uploadMultiple(mediaFiles, 'posts');
+        mediaUrls = uploads.map(u => u.url);
+      }
+
+      await createPost({
+        content: newPostContent,
+        post_type: mediaUrls.length > 0 ? 'image' : 'text',
+        media_urls: mediaUrls,
+      });
+
+      setNewPostContent("");
+      setMediaPreview([]);
+      setMediaFiles([]);
+    } finally {
+      setIsPosting(false);
+    }
   };
 
   return (
@@ -132,35 +135,94 @@ export default function FeedPage() {
                 <div className="p-6 rounded-2xl bg-card border border-border">
                   <div className="flex gap-4">
                     <Avatar className="h-10 w-10">
-                      <AvatarFallback>U</AvatarFallback>
+                      <AvatarImage src={profile?.avatar_url || undefined} />
+                      <AvatarFallback>{profile?.display_name?.[0] || user?.email?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <Input
+                      <Textarea
                         placeholder="¿Qué está pasando?"
-                        value={newPost}
-                        onChange={(e) => setNewPost(e.target.value)}
-                        className="bg-muted border-0 mb-4"
+                        value={newPostContent}
+                        onChange={(e) => setNewPostContent(e.target.value)}
+                        className="bg-muted border-0 mb-4 min-h-[80px] resize-none"
+                        disabled={isPosting}
                       />
+                      
+                      {/* Media Preview */}
+                      {mediaPreview.length > 0 && (
+                        <div className="flex gap-2 mb-4 flex-wrap">
+                          {mediaPreview.map((preview, index) => (
+                            <div key={index} className="relative group">
+                              <img 
+                                src={preview} 
+                                alt="Preview" 
+                                className="h-20 w-20 object-cover rounded-lg"
+                              />
+                              <button
+                                onClick={() => removeMedia(index)}
+                                className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
                       <div className="flex items-center justify-between">
                         <div className="flex gap-2">
-                          <Button variant="ghost" size="iconSm">
+                          <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleFileSelect}
+                            accept="image/*,video/*"
+                            multiple
+                            className="hidden"
+                          />
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={isPosting}
+                          >
                             <ImageIcon className="h-5 w-5 text-primary" />
                           </Button>
-                          <Button variant="ghost" size="iconSm">
+                          <Button variant="ghost" size="sm" disabled={isPosting}>
                             <Video className="h-5 w-5 text-secondary" />
                           </Button>
-                          <Button variant="ghost" size="iconSm">
-                            <Smile className="h-5 w-5 text-muted-foreground" />
-                          </Button>
                         </div>
-                        <Button variant="hero" size="sm" disabled={!newPost.trim()}>
-                          <Send className="h-4 w-4 mr-2" />
-                          Publicar
+                        <Button 
+                          variant="hero" 
+                          size="sm" 
+                          disabled={(!newPostContent.trim() && mediaFiles.length === 0) || isPosting}
+                          onClick={handlePost}
+                        >
+                          {isPosting ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <>
+                              <Send className="h-4 w-4 mr-2" />
+                              Publicar
+                            </>
+                          )}
                         </Button>
                       </div>
                     </div>
                   </div>
                 </div>
+
+                {/* Loading State */}
+                {loading && (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                )}
+
+                {/* Empty State */}
+                {!loading && posts.length === 0 && (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground">No hay publicaciones aún. ¡Sé el primero en compartir!</p>
+                  </div>
+                )}
 
                 {/* Posts */}
                 {posts.map((post) => (
@@ -169,37 +231,62 @@ export default function FeedPage() {
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex gap-3">
                         <Avatar className="h-10 w-10">
-                          <AvatarImage src={post.author.avatar} alt={post.author.name} />
-                          <AvatarFallback>{post.author.name[0]}</AvatarFallback>
+                          <AvatarImage src={post.profiles?.avatar_url || undefined} />
+                          <AvatarFallback>{post.profiles?.display_name?.[0] || 'U'}</AvatarFallback>
                         </Avatar>
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-foreground">{post.author.name}</span>
-                            {post.author.verified && (
+                            <span className="font-medium text-foreground">
+                              {post.profiles?.display_name || post.profiles?.username || 'Usuario'}
+                            </span>
+                            {post.profiles?.is_verified && (
                               <div className="w-4 h-4 rounded-full bg-primary flex items-center justify-center">
                                 <span className="text-[10px] text-primary-foreground">✓</span>
                               </div>
                             )}
                           </div>
-                          <span className="text-sm text-muted-foreground">{post.author.username} · {post.timestamp}</span>
+                          <span className="text-sm text-muted-foreground">
+                            @{post.profiles?.username || 'usuario'} · {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: es })}
+                          </span>
                         </div>
                       </div>
-                      <Button variant="ghost" size="iconSm">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
+                      {post.user_id === user?.id && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem 
+                              onClick={() => deletePost(post.id)}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Eliminar
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </div>
 
                     {/* Content */}
-                    <p className="text-foreground mb-4">{post.content}</p>
+                    {post.content && (
+                      <p className="text-foreground mb-4 whitespace-pre-wrap">{post.content}</p>
+                    )}
 
-                    {/* Image */}
-                    {post.image && (
-                      <div className="rounded-xl overflow-hidden mb-4">
-                        <img 
-                          src={post.image} 
-                          alt="Post content" 
-                          className="w-full h-auto object-cover"
-                        />
+                    {/* Media */}
+                    {post.media_urls && post.media_urls.length > 0 && (
+                      <div className={`grid gap-2 mb-4 ${post.media_urls.length > 1 ? 'grid-cols-2' : ''}`}>
+                        {post.media_urls.map((url, i) => (
+                          <div key={i} className="rounded-xl overflow-hidden">
+                            <img 
+                              src={url} 
+                              alt="Post content" 
+                              className="w-full h-auto object-cover max-h-96"
+                            />
+                          </div>
+                        ))}
                       </div>
                     )}
 
@@ -209,20 +296,20 @@ export default function FeedPage() {
                         variant="ghost" 
                         size="sm" 
                         onClick={() => toggleLike(post.id)}
-                        className={likedPosts.includes(post.id) ? "text-destructive" : "text-muted-foreground"}
+                        className={likedPosts.has(post.id) ? "text-destructive" : "text-muted-foreground"}
                       >
-                        <Heart className={`h-4 w-4 mr-2 ${likedPosts.includes(post.id) ? "fill-current" : ""}`} />
-                        {post.likes + (likedPosts.includes(post.id) && !post.isLiked ? 1 : 0)}
+                        <Heart className={`h-4 w-4 mr-2 ${likedPosts.has(post.id) ? "fill-current" : ""}`} />
+                        {post.like_count}
                       </Button>
                       <Button variant="ghost" size="sm" className="text-muted-foreground">
                         <MessageCircle className="h-4 w-4 mr-2" />
-                        {post.comments}
+                        {post.comment_count}
                       </Button>
                       <Button variant="ghost" size="sm" className="text-muted-foreground">
                         <Share2 className="h-4 w-4 mr-2" />
-                        {post.shares}
+                        {post.share_count}
                       </Button>
-                      <Button variant="ghost" size="iconSm" className="text-muted-foreground">
+                      <Button variant="ghost" size="sm" className="text-muted-foreground">
                         <Bookmark className="h-4 w-4" />
                       </Button>
                     </div>
@@ -238,16 +325,16 @@ export default function FeedPage() {
                     Sugeridos
                   </h3>
                   <div className="space-y-4">
-                    {suggestedUsers.map((user, index) => (
+                    {suggestedUsers.map((suggestedUser, index) => (
                       <div key={index} className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <Avatar className="h-8 w-8">
-                            <AvatarImage src={user.avatar} alt={user.name} />
-                            <AvatarFallback>{user.name[0]}</AvatarFallback>
+                            <AvatarImage src={suggestedUser.avatar} alt={suggestedUser.name} />
+                            <AvatarFallback>{suggestedUser.name[0]}</AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="text-sm font-medium text-foreground">{user.name}</p>
-                            <p className="text-xs text-muted-foreground">{user.username}</p>
+                            <p className="text-sm font-medium text-foreground">{suggestedUser.name}</p>
+                            <p className="text-xs text-muted-foreground">{suggestedUser.username}</p>
                           </div>
                         </div>
                         <Button variant="outline" size="sm">Seguir</Button>
@@ -261,8 +348,8 @@ export default function FeedPage() {
                     <Radio className="h-4 w-4 text-primary animate-pulse" />
                     <span className="text-sm font-medium text-primary">En Vivo Ahora</span>
                   </div>
-                  <p className="text-sm text-foreground mb-3">Ana está en vivo: "Creatividad con IA"</p>
-                  <Button variant="hero" size="sm" className="w-full">
+                  <p className="text-sm text-foreground mb-3">Próximamente: Lives en TAMV</p>
+                  <Button variant="hero" size="sm" className="w-full" disabled>
                     Ver Live
                   </Button>
                 </div>
