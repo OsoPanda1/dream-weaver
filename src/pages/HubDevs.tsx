@@ -13,7 +13,7 @@ import {
   Check
 } from "lucide-react";
 import { useState } from "react";
-import hubDevsPreview from "@/assets/hub-devs-preview.jpg";
+import hubdevsHero from "@/assets/hubdevs-hero.jpg";
 
 const apiEndpoints = [
   { method: "GET", path: "/api/v1/auth/me", description: "Obtener usuario actual" },
@@ -65,12 +65,12 @@ export default function HubDevs() {
           <section 
             className="relative py-24 overflow-hidden"
             style={{
-              backgroundImage: `url(${hubDevsPreview})`,
+              backgroundImage: `url(${hubdevsHero})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
             }}
           >
-            <div className="absolute inset-0 bg-gradient-to-b from-background/95 via-background/80 to-background" />
+            <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/75 to-background" />
             <div className="container mx-auto px-4 relative z-10">
               <div className="max-w-3xl mx-auto text-center">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 border border-secondary/20 mb-6">
