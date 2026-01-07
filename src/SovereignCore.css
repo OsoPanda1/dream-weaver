@@ -1,0 +1,138 @@
+/**
+ * 🛰️ TAMV SOVEREIGN DESIGN SYSTEM - MD-X4™
+ * VERSION: SUPREME_CSS_v26.0
+ * AUTOR: Edwin Oswaldo Castillo Trejo
+ * FILOSOFÍA: Obsidiana Imperial & Oro Resiliente
+ */
+
+:root {
+  /* Paleta de Soberanía */
+  --tamv-gold: #d4af37;
+  --tamv-gold-glow: rgba(212, 175, 55, 0.4);
+  --tamv-obsidian: #020202;
+  --tamv-deep-space: #050505;
+  --tamv-isabella-cyan: #22d3ee;
+  --tamv-emergency-red: #7f1d1d;
+  
+  /* Tipografía de Poder */
+  --font-main: 'Inter', system-ui, sans-serif;
+  --font-sovereign: 'Orbitron', sans-serif;
+
+  max-width: 100vw;
+  margin: 0;
+  padding: 0;
+  background-color: var(--tamv-obsidian);
+  color: rgba(255, 255, 255, 0.9);
+  font-family: var(--font-main);
+  overflow-x: hidden;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 0;
+  text-align: center;
+  /* Grilla de Fondo de Realidad Virtual (DreamSpaces) */
+  background-image: 
+    radial-gradient(circle at 50% 50%, rgba(212, 175, 55, 0.03) 0%, transparent 80%),
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 100% 100%, 50px 50px, 50px 50px;
+}
+
+/* --- LOGOTIPOS SOBERANOS (ANUBIS & ISABELLA) --- */
+.logo {
+  height: 8em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: all 500ms cubic-bezier(0.4, 0, 0.2, 1);
+  filter: drop-shadow(0 0 1em rgba(255, 255, 255, 0.05));
+}
+
+.logo:hover {
+  /* Efecto de Activación de Nodo MSR */
+  filter: drop-shadow(0 0 3em var(--tamv-gold-glow));
+  transform: scale(1.05) translateY(-5px);
+}
+
+.logo.react:hover {
+  /* Sincronización con Isabella AI */
+  filter: drop-shadow(0 0 3em rgba(34, 211, 238, 0.4));
+}
+
+/* --- ANIMACIONES CUÁNTICAS (Resiliencia Fénix) --- */
+@keyframes logo-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse-gold {
+  0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
+  70% { box-shadow: 0 0 0 20px rgba(212, 175, 55, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Rotación de Coherencia para el Core de Isabella */
+  .logo.isabella-core {
+    animation: logo-spin infinite 40s linear;
+  }
+}
+
+/* --- TARJETAS DE CONTENEDOR (QuantumPods) --- */
+.card {
+  padding: 2.5rem;
+  background: rgba(10, 10, 10, 0.6);
+  border: 1px solid rgba(212, 175, 55, 0.1);
+  border-radius: 24px;
+  backdrop-filter: blur(20px);
+  transition: border 0.3s ease;
+  margin: 1rem;
+}
+
+.card:hover {
+  border: 1px solid var(--tamv-gold);
+  background: rgba(10, 10, 10, 0.8);
+}
+
+/* --- TEXTOS Y DOCUMENTACIÓN (LIBKORIMACODEX Style) --- */
+.read-the-docs {
+  color: var(--tamv-gold);
+  font-family: var(--font-sovereign);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  opacity: 0.6;
+  margin-top: 2rem;
+  transition: opacity 0.3s;
+}
+
+.read-the-docs:hover {
+  opacity: 1;
+  text-shadow: 0 0 10px var(--tamv-gold-glow);
+}
+
+/* --- BOTONES DE ACCIÓN SOBERANA --- */
+button {
+  background: var(--tamv-gold);
+  color: var(--tamv-obsidian);
+  font-weight: 900;
+  font-family: var(--font-sovereign);
+  padding: 1rem 2.5rem;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px var(--tamv-gold-glow);
+  filter: brightness(1.1);
+}
+
+button:active {
+  transform: scale(0.95);
+}
