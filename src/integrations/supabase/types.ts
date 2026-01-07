@@ -443,7 +443,15 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      conversations: {
+        Row: {
+          conversation_partner: string | null
+          is_read: boolean | null
+          last_message: string | null
+          last_message_at: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
