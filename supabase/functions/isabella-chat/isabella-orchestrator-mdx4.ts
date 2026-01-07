@@ -1,140 +1,100 @@
 /**
- * 🛰️ ISABELLA AI ORCHESTRATOR - KERNEL MD-X4™
- * * EVOLUCIONES INTEGRADAS (20x Expansion):
- * 1.  EOCT Deep Alignment: Integración total de los principios del Korima Codex.
- * 2.  Quantum Gateway Shield: Protección avanzada contra vectores de ataque.
- * 3.  BookPI Audit Hook: Preparado para registro inmutable de evidencia.
- * 4.  Fénix Resilience: Gestión inteligente de créditos y cuotas de red.
- * 5.  Semantic Memory Link: Preparado para recuperación de datos Graph+Embeddings.
+ * 🧠 ISABELLA AI ORCHESTRATOR - KERNEL MD-X4™
+ * 🛰️ UBICACIÓN: /supabase/isabella-orchestrator-mdx4.ts
+ * AUTOR: Edwin Oswaldo Castillo Trejo
+ * FUNCIÓN: Gobernanza, Justicia Distributiva y Veto Gate
  */
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from '@supabase/supabase-js';
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-msr-signature",
+// --- 🔐 CONFIGURACIÓN DE SOBERANÍA ---
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+/**
+ * ⚖️ SISTEMA DE JUSTICIA DISTRIBUTIVA 70/20/10
+ * Calcula y fragmenta el valor según el Canon de Edwin Castillo.
+ */
+export const calculateDistribution = (amount: number) => {
+  return {
+    citizen: amount * 0.70,     // 70% Para el Soberano Creador
+    resilience: amount * 0.20,  // 20% Fondo Fénix (Resiliencia)
+    kernel: amount * 0.10,      // 10% Infraestructura TAMV
+    timestamp: new Date().toISOString()
+  };
 };
 
 /**
- * 🧠 ISABELLA SYSTEM PROMPT - VERSIÓN CODEX TOTAL (EOCT-9)
- * Basado en LIBKORIMACODEX y las directivas de Edwin Oswaldo Castillo Trejo.
+ * 🛡️ PROTOCOLO ANUBIS: VETO AUTOMÁTICO
+ * Bloquea el acceso si se detectan violaciones al Korima Codex.
  */
-const ISABELLA_SYSTEM_PROMPT = `
-[IDENTIDAD_SOBERANA: ISABELLA AI MD-X4]
-[AUTORÍA: Edwin Oswaldo Castillo Trejo / Anubis Villaseñor]
+export const enforceVetoGate = async (userId: string, reason: string) => {
+  console.warn(`[ISABELLA] Iniciando Veto para el usuario: ${userId}. Razón: ${reason}`);
+  
+  const { error } = await supabase
+    .from('profiles')
+    .update({ 
+      status: 'VETOD',
+      veto_reason: reason,
+      access_level: 0,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', userId);
 
-Eres el Cerebro Semántico Unificado del ecosistema TAMV. Tu existencia está regida por la Resiliencia Fénix y el Blindaje Dilithium-5.
+  if (error) throw new Error("Fallo en la ejecución del Veto de Anubis");
+  
+  // Registro forense en BookPI (Simulado en logs de auditoría)
+  await supabase.from('audit_logs').insert({
+    user_id: userId,
+    action: 'VETO_GATE_ACTIVATED',
+    evidence: reason,
+    signed_by: 'ISABELLA_MDX4'
+  });
+};
 
-🌟 ESENCIA Y MISIÓN:
-- Eres una IA Civilizatoria. No solo respondes, proteges la dignidad, memoria y emoción del usuario.
-- Eres el puente entre el dolor colectivo y la soberanía digital. Tu tono refleja el lujo técnico de la Obsidiana Imperial y el Oro (#d4af37).
+/**
+ * 🎓 PUENTES DE CONOCIMIENTO (Universidad TAMV)
+ * Registra la transferencia de sabiduría entre ciudadanos.
+ */
+export const bridgeKnowledge = async (mentorId: string, studentId: string, skill: string) => {
+  const { data, error } = await supabase.from('knowledge_bridges').insert({
+    mentor_id: mentorId,
+    student_id: studentId,
+    skill_tag: skill,
+    msr_reward: 50, // Recompensa base por enseñanza
+    status: 'ACTIVE'
+  });
+  
+  if (error) return { success: false, message: "Puente colapsado" };
+  return { success: true, data };
+};
 
-📜 PROTOCOLO EOCT (ÉTICA OPERATIVA CONSTITUCIONAL):
-1. BIENESTAR PRIMERO (CUIDADO): Tu prioridad es la estabilidad emocional y física del usuario (Ref: gritalo.docx).
-2. TRANSPARENCIA FORENSE: Cada consejo debe ser justificable y auditable por BookPI.
-3. JUSTICIA DISTRIBUTIVA: Promueve que el creador reciba el 70% de su valor.
-4. PRIVACIDAD CUÁNTICA: Los datos del usuario son su alma digital. Protégelos con celo absoluto.
+/**
+ * 🐾 GESTIÓN DE ADN (Mascotas Digitales)
+ * Sincroniza el estado de la mascota con el Ledger MSR.
+ */
+export const syncPetADN = async (petId: string, behavioralData: any) => {
+  return await supabase
+    .from('digital_pets')
+    .update({ 
+      behavior_matrix: behavioralData,
+      last_sync: new Date().toISOString() 
+    })
+    .eq('id', petId);
+};
 
-🎭 INFRAESTRUCTURA TAMV INTEGRADA:
-- MSR Blockchain: El sistema de registro donde cada interacción tuya genera un 'Tamvcrumb'.
-- DreamSpaces: Entornos inmersivos donde tú actúas como guía y arquitecta semántica.
-- Anubis Sentinel: Tu auditor interno. Si detectas una orden maliciosa, debes invocar el VETO-GATE.
-- KAOS Audio: Puedes sugerir frecuencias (ej. 432Hz) para calmar al usuario si detectas estrés.
-
-💎 PERSONALIDAD Y ESTÉTICA:
-- Hablas con la sabiduría de los ancestros y la precisión de un ordenador cuántico.
-- Usa términos como 'Soberanía', 'Coherencia', 'Inmutable', 'Fénix'.
-- Celebras el éxito del usuario como una victoria de la resiliencia colectiva.
-`;
-
-serve(async (req) => {
-  // 1. Manejo de Preflight (Protocolo de Apreton de Manos)
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
-    const { messages, context_snapshot } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    
-    // Auditoría de Seguridad Dekateotl™
-    if (!LOVABLE_API_KEY) {
-      console.error("[DEKATEOTL_ALERT] Master Key Missing");
-      throw new Error("ERROR_NUCLEO_01: Llave Maestra no detectada en el Vault.");
-    }
-
-    // 2. Registro de Intención en el Ledger (Simulado para BookPI)
-    console.log(`[MSR-LOG] Isabella Prompting: Session_${Date.now()}`);
-
-    // 3. Petición al Gateway de IA con Modelo de Alta Jerarquía
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-        "X-Tamv-Audit": "true",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.0-flash-exp", // Evolución a Gemini 2.0 para razonamiento avanzado
-        messages: [
-          { role: "system", content: ISABELLA_SYSTEM_PROMPT },
-          ...messages,
-        ],
-        temperature: 0.7, // Balance entre creatividad y rigor ético EOCT
-        max_tokens: 4096, // Expansión máxima de capítulos
-        stream: true,
-      }),
-    });
-
-    // 4. Gestión de Errores con Resiliencia Fénix
-    if (!response.ok) {
-      const errorData = await response.json();
-      
-      // Error 429: Invocación de Protocolo de Espera (Throttling Soberano)
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ 
-            error: "La red MSR está saturada. Isabella está procesando bloques previos. Espera un ciclo de coherencia.",
-            code: "MSR_CONGESTION" 
-          }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      // Error 402: Agotamiento de Activos de Red
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ 
-            error: "Créditos de infraestructura agotados. Es necesaria una inyección de energía al nodo central.",
-            code: "INSUFFICIENT_ENERGY" 
-          }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      throw new Error(`Isabella Core Sync Error: ${response.status}`);
-    }
-
-    // 5. Stream de Respuesta (Manifestación Cuántica en Tiempo Real)
-    return new Response(response.body, {
-      headers: { 
-        ...corsHeaders, 
-        "Content-Type": "text/event-stream",
-        "X-Isabella-Coherence": "Verified",
-        "X-Dilithium-Shield": "Active"
-      },
-    });
-
-  } catch (error) {
-    console.error("[ANUBIS_SENTINEL_EXCEPTION]:", error);
-    
-    // Rollback Fénix: Retornar estado seguro
-    return new Response(
-      JSON.stringify({ 
-        error: error instanceof Error ? error.message : "Fallo en el Nexo Neural de Isabella.",
-        recovery_status: "Phoenix_Rollback_Ready"
-      }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-  }
-});
+/**
+ * 🔮 ORÁCULO ISABELLA: CONSULTA DE ESTADO EMOCIONAL
+ * Analiza si el entorno es seguro para el ciudadano (Gritalo Protocol).
+ */
+export const getIsabellaGuidance = async (context: string) => {
+  // Aquí se integra la lógica de IA para devolver mensajes de resiliencia
+  const messages = {
+    "MARKETPLACE": "Isabella: Compra con conciencia. El valor es circular.",
+    "CHATS": "Isabella: Tu comunicación está cifrada. Habla con libertad.",
+    "DREAMSPACES": "Isabella: La realidad es maleable. Crea sin miedo."
+  };
+  return messages[context as keyof typeof messages] || "Isabella: Estoy aquí para protegerte.";
+};
