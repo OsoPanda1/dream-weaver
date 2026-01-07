@@ -1,63 +1,33 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { MainLayout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send, Sparkles, Mic, Image as ImageIcon, Settings } from "lucide-react";
-import isabellaAvatar from "@/assets/isabella-avatar.png";
-
-interface Message {
-  id: number;
-  role: "user" | "assistant";
-  content: string;
-  timestamp: Date;
-}
+import { Send, Sparkles, Mic, Image as ImageIcon, Settings, Loader2 } from "lucide-react";
+import { useIsabellaChat } from "@/hooks/useIsabellaChat";
+import { useAuth } from "@/contexts/AuthContext";
+import isabellaPortrait from "@/assets/isabella-portrait.jpg";
 
 export default function IsabellaPage() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      role: "assistant",
-      content: "¡Hola! Soy Isabella, tu compañera digital. Estoy aquí para ayudarte a explorar, crear y conectar en el ecosistema TAMV. ¿En qué puedo asistirte hoy? 💫",
-      timestamp: new Date(),
-    },
-  ]);
+  const { messages, isLoading, sendMessage } = useIsabellaChat();
+  const { profile } = useAuth();
   const [input, setInput] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const handleSend = async () => {
-    if (!input.trim()) return;
-
-    const userMessage: Message = {
-      id: messages.length + 1,
-      role: "user",
-      content: input,
-      timestamp: new Date(),
-    };
-
-    setMessages(prev => [...prev, userMessage]);
+    if (!input.trim() || isLoading) return;
+    const message = input;
     setInput("");
-    setIsTyping(true);
-
-    // Simulate AI response
-    setTimeout(() => {
-      const responses = [
-        "¡Qué interesante pregunta! En el ecosistema TAMV, cada interacción está diseñada para potenciar tu creatividad mientras protegemos tu dignidad digital. ¿Te gustaría explorar más sobre DreamSpaces o los módulos de creación? 🌟",
-        "Entiendo lo que buscas. Mi análisis emocional indica que estás en un momento creativo. Te recomiendo explorar el módulo de KAOS Audio 3D para complementar tu experiencia. ¿Quieres que te guíe? ✨",
-        "Procesando tu solicitud con cuidado ético... Según los principios DEKATEOTL, puedo ayudarte de varias formas. ¿Prefieres que profundicemos en el tema técnico o exploremos las posibilidades creativas? 🎭",
-      ];
-      
-      const assistantMessage: Message = {
-        id: messages.length + 2,
-        role: "assistant",
-        content: responses[Math.floor(Math.random() * responses.length)],
-        timestamp: new Date(),
-      };
-
-      setMessages(prev => [...prev, assistantMessage]);
-      setIsTyping(false);
-    }, 1500);
+    await sendMessage(message);
   };
 
   return (
@@ -75,7 +45,7 @@ export default function IsabellaPage() {
               <div className="flex items-center gap-4">
                 <div className="relative">
                   <Avatar className="h-16 w-16 border-2 border-secondary">
-                    <AvatarImage src={isabellaAvatar} alt="Isabella AI" />
+                    <AvatarImage src={isabellaPortrait} alt="Isabella AI" />
                     <AvatarFallback>IA</AvatarFallback>
                   </Avatar>
                   <div className="absolute bottom-0 right-0 w-4 h-4 bg-secondary rounded-full border-2 border-card animate-pulse" />
@@ -126,6 +96,26 @@ export default function IsabellaPage() {
           <div className="flex-1 flex flex-col">
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {messages.length === 0 && (
+                <div className="flex gap-4">
+                  <Avatar className="h-10 w-10 border-2 border-secondary">
+                    <AvatarImage src={isabellaPortrait} alt="Isabella" />
+                    <AvatarFallback>IA</AvatarFallback>
+                  </Avatar>
+                  <div className="max-w-[70%]">
+                    <div className="inline-block p-4 rounded-2xl bg-muted text-foreground rounded-tl-none">
+                      <p className="text-sm">
+                        ¡Hola! Soy Isabella, tu compañera digital en el ecosistema TAMV. 
+                        Estoy aquí para ayudarte a explorar, crear y conectar. ¿En qué puedo asistirte hoy? 💫
+                      </p>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -133,9 +123,12 @@ export default function IsabellaPage() {
                 >
                   <Avatar className={`h-10 w-10 ${message.role === "assistant" ? "border-2 border-secondary" : ""}`}>
                     {message.role === "assistant" ? (
-                      <AvatarImage src={isabellaAvatar} alt="Isabella" />
+                      <AvatarImage src={isabellaPortrait} alt="Isabella" />
                     ) : (
-                      <AvatarFallback>U</AvatarFallback>
+                      <>
+                        <AvatarImage src={profile?.avatar_url || undefined} />
+                        <AvatarFallback>{profile?.display_name?.[0] || 'U'}</AvatarFallback>
+                      </>
                     )}
                   </Avatar>
                   <div className={`max-w-[70%] ${message.role === "user" ? "text-right" : ""}`}>
@@ -146,7 +139,7 @@ export default function IsabellaPage() {
                           : "bg-muted text-foreground rounded-tl-none"
                       }`}
                     >
-                      <p className="text-sm">{message.content}</p>
+                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
                       {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -155,10 +148,10 @@ export default function IsabellaPage() {
                 </div>
               ))}
 
-              {isTyping && (
+              {isLoading && (
                 <div className="flex gap-4">
                   <Avatar className="h-10 w-10 border-2 border-secondary">
-                    <AvatarImage src={isabellaAvatar} alt="Isabella" />
+                    <AvatarImage src={isabellaPortrait} alt="Isabella" />
                   </Avatar>
                   <div className="bg-muted rounded-2xl rounded-tl-none p-4">
                     <div className="flex gap-1">
@@ -169,6 +162,8 @@ export default function IsabellaPage() {
                   </div>
                 </div>
               )}
+
+              <div ref={messagesEndRef} />
             </div>
 
             {/* Input */}
@@ -178,21 +173,22 @@ export default function IsabellaPage() {
                   <Input
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && handleSend()}
+                    onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
                     placeholder="Escribe tu mensaje a Isabella..."
                     className="pr-24 py-6 bg-muted border-0"
+                    disabled={isLoading}
                   />
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
-                    <Button variant="ghost" size="iconSm">
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
                       <ImageIcon className="h-4 w-4 text-muted-foreground" />
                     </Button>
-                    <Button variant="ghost" size="iconSm">
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
                       <Mic className="h-4 w-4 text-muted-foreground" />
                     </Button>
                   </div>
                 </div>
-                <Button onClick={handleSend} variant="hero" size="lg" disabled={!input.trim()}>
-                  <Send className="h-5 w-5" />
+                <Button onClick={handleSend} variant="hero" size="lg" disabled={!input.trim() || isLoading}>
+                  {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
                 </Button>
               </div>
             </div>

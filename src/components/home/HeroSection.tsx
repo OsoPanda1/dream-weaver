@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Play, ArrowRight, Sparkles, Shield, Users } from "lucide-react";
-import heroBg from "@/assets/hero-bg.jpg";
-import isabellaAvatar from "@/assets/isabella-avatar.png";
+import { Play, ArrowRight, Sparkles } from "lucide-react";
+import heroBanner from "@/assets/hero-banner.jpg";
+import isabellaPortrait from "@/assets/isabella-portrait.jpg";
 
 export function HeroSection() {
   return (
@@ -10,10 +10,10 @@ export function HeroSection() {
       {/* Background Image */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${heroBg})` }}
+        style={{ backgroundImage: `url(${heroBanner})` }}
       >
-        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-transparent to-background/70" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/50 to-background" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/60 via-transparent to-background/60" />
       </div>
 
       {/* Animated glow effects */}
@@ -23,7 +23,7 @@ export function HeroSection() {
       <div className="container mx-auto px-4 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left Content */}
-          <div className="text-center lg:text-left animate-fade-in-up">
+          <div className="text-center lg:text-left animate-slide-up">
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8">
               <Sparkles className="h-4 w-4 text-primary" />
@@ -56,9 +56,9 @@ export function HeroSection() {
                 </Link>
               </Button>
               <Button variant="heroOutline" size="xl" asChild>
-                <Link to="/about">
+                <Link to="/isabella">
                   <Play className="mr-2 h-5 w-5" />
-                  Ver Demo
+                  Conoce a Isabella
                 </Link>
               </Button>
             </div>
@@ -84,15 +84,14 @@ export function HeroSection() {
           <div className="hidden lg:flex justify-center items-center">
             <div className="relative">
               {/* Glow ring */}
-              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary via-secondary to-primary animate-spin-slow opacity-30 blur-xl" 
-                   style={{ animationDuration: '10s' }} />
+              <div className="absolute -inset-4 rounded-full bg-gradient-to-r from-primary via-secondary to-primary opacity-30 blur-2xl animate-pulse" />
               
               {/* Avatar container */}
-              <div className="relative glass rounded-3xl p-8 border border-primary/20 animate-float">
+              <div className="relative glass rounded-3xl p-6 border border-primary/20 animate-float">
                 <img 
-                  src={isabellaAvatar} 
+                  src={isabellaPortrait} 
                   alt="Isabella AI" 
-                  className="w-64 h-64 rounded-2xl object-cover"
+                  className="w-72 h-72 rounded-2xl object-cover"
                 />
                 <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 px-6 py-3 glass rounded-full border border-primary/30">
                   <div className="flex items-center gap-2">
