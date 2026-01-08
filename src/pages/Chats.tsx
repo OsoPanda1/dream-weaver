@@ -1,7 +1,6 @@
 import { MainLayout } from '@/components/layout/MainLayout';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -10,15 +9,23 @@ import { Send, MessageSquare, Search } from 'lucide-react';
 import { useMessages } from '@/hooks/useMessages';
 
 export default function Chats() {
-  const { user, profile } = useAuth();
-  const { conversations, messages, sendMessage, selectConversation, selectedConversation, isLoading } = useMessages();
+  const { user } = useAuth();
+  const { conversations, currentMessages, loading, fetchMessages, sendMessage } = useMessages();
+  const [selectedPartnerId, setSelectedPartnerId] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState('');
 
+  const handleSelectConversation = (partnerId: string) => {
+    setSelectedPartnerId(partnerId);
+    fetchMessages(partnerId);
+  };
+
   const handleSend = async () => {
-    if (!newMessage.trim() || !selectedConversation) return;
-    await sendMessage(selectedConversation, newMessage);
+    if (!newMessage.trim() || !selectedPartnerId) return;
+    await sendMessage(selectedPartnerId, newMessage);
     setNewMessage('');
   };
+
+  const selectedConversation = conversations.find(c => c.partner_id === selectedPartnerId);
 
   return (
     <MainLayout>
@@ -37,25 +44,41 @@ export default function Chats() {
           </div>
 
           <ScrollArea className="flex-1">
-            {conversations.length === 0 ? (
+            {loading ? (
+              <div className="p-4 text-center text-muted-foreground">
+                <p>Cargando...</p>
+              </div>
+            ) : conversations.length === 0 ? (
               <div className="p-4 text-center text-muted-foreground">
                 <p>No hay conversaciones</p>
               </div>
             ) : (
               conversations.map((conv) => (
                 <div
-                  key={conv.conversation_partner}
-                  onClick={() => selectConversation(conv.conversation_partner || '')}
+                  key={conv.partner_id}
+                  onClick={() => handleSelectConversation(conv.partner_id)}
                   className={`p-4 border-b border-border cursor-pointer hover:bg-muted/50 transition-colors ${
-                    selectedConversation === conv.conversation_partner ? 'bg-muted' : ''
+                    selectedPartnerId === conv.partner_id ? 'bg-muted' : ''
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10">
-                      <AvatarFallback>{conv.conversation_partner?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                      <AvatarImage src={conv.partner_profile.avatar_url || ''} />
+                      <AvatarFallback>
+                        {(conv.partner_profile.display_name || conv.partner_profile.username || 'U').slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground truncate">{conv.conversation_partner}</p>
+                      <div className="flex items-center justify-between">
+                        <p className="font-medium text-foreground truncate">
+                          {conv.partner_profile.display_name || conv.partner_profile.username}
+                        </p>
+                        {conv.unread_count > 0 && (
+                          <span className="bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full">
+                            {conv.unread_count}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-sm text-muted-foreground truncate">{conv.last_message}</p>
                     </div>
                   </div>
@@ -67,15 +90,20 @@ export default function Chats() {
 
         {/* Chat Area */}
         <div className="flex-1 flex flex-col">
-          {selectedConversation ? (
+          {selectedPartnerId && selectedConversation ? (
             <>
               <div className="p-4 border-b border-border">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-10 w-10">
-                    <AvatarFallback>{selectedConversation.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    <AvatarImage src={selectedConversation.partner_profile.avatar_url || ''} />
+                    <AvatarFallback>
+                      {(selectedConversation.partner_profile.display_name || selectedConversation.partner_profile.username || 'U').slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-medium text-foreground">{selectedConversation}</p>
+                    <p className="font-medium text-foreground">
+                      {selectedConversation.partner_profile.display_name || selectedConversation.partner_profile.username}
+                    </p>
                     <p className="text-xs text-muted-foreground">En línea</p>
                   </div>
                 </div>
@@ -83,7 +111,7 @@ export default function Chats() {
 
               <ScrollArea className="flex-1 p-4">
                 <div className="space-y-4">
-                  {messages.map((msg) => (
+                  {currentMessages.map((msg) => (
                     <div
                       key={msg.id}
                       className={`flex ${msg.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
@@ -113,7 +141,7 @@ export default function Chats() {
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                   className="flex-1"
                 />
-                <Button onClick={handleSend} disabled={isLoading}>
+                <Button onClick={handleSend} disabled={loading}>
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
