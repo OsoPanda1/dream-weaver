@@ -1,147 +1,102 @@
-import { motion } from "framer-motion";
-import { Music, Radio, Headphones, Sparkles } from "lucide-react";
-import ImmersiveBackground from "@/components/ImmersiveBackground";
-import KaosAudioFX from "@/components/KaosAudioFX";
-import SensoryFXManager from "@/components/SensoryFXManager";
-import { Card } from "@/components/ui/card";
-import kaosHero from "@/assets/kaos-audio-hero.jpg";
+import { MainLayout } from '@/components/layout/MainLayout';
+import { Music, Radio, Headphones, Sparkles, Play, Pause, Volume2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
+import { useState } from 'react';
 
 export default function AudioKaos() {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolume] = useState([75]);
+
+  const presets = [
+    { name: 'Meditación Quantum', mood: 'calm', color: 'from-cyan-500/20 to-blue-500/20' },
+    { name: 'Enfoque Creativo', mood: 'energy', color: 'from-yellow-500/20 to-orange-500/20' },
+    { name: 'Celebración Épica', mood: 'excitement', color: 'from-pink-500/20 to-red-500/20' },
+    { name: 'Exploración 4D', mood: 'wonder', color: 'from-purple-500/20 to-indigo-500/20' },
+    { name: 'Conexión Social', mood: 'joy', color: 'from-green-500/20 to-teal-500/20' },
+    { name: 'Descanso Profundo', mood: 'peace', color: 'from-slate-500/20 to-gray-500/20' },
+  ];
+
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      <ImmersiveBackground />
-      
-      {/* Epic Hero Section */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="relative h-[70vh] overflow-hidden"
-      >
-        <div className="absolute inset-0">
-          <img src={kaosHero} alt="Audio Kaos" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/50 to-background" />
-        </div>
-        
-        <div className="relative h-full flex flex-col items-center justify-center text-center px-4">
-          <motion.div
-            animate={{
-              scale: [1, 1.2, 1],
-              rotate: [0, 180, 360],
-            }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-            className="w-32 h-32 rounded-full bg-gradient-quantum flex items-center justify-center mb-8 shadow-glow"
-          >
-            <Music className="w-16 h-16 text-white" />
-          </motion.div>
-          
-          <motion.h1
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="text-7xl md:text-9xl font-orbitron font-bold text-gradient-quantum mb-6"
-          >
-            KAOS AUDIO
-          </motion.h1>
-          
-          <motion.p
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="text-2xl md:text-3xl text-muted-foreground max-w-3xl mb-8"
-          >
-            Experiencia Sensorial Omnidireccional
-          </motion.p>
+    <MainLayout>
+      <div className="min-h-screen bg-background p-6">
+        <div className="max-w-6xl mx-auto space-y-8">
+          {/* Hero */}
+          <div className="text-center py-16 relative">
+            <div className="absolute inset-0 bg-gradient-to-b from-primary/10 to-transparent rounded-3xl" />
+            <div className="relative">
+              <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center mb-6 animate-pulse">
+                <Music className="w-12 h-12 text-primary-foreground" />
+              </div>
+              <h1 className="text-5xl font-bold text-foreground mb-4">KAOS AUDIO</h1>
+              <p className="text-xl text-muted-foreground mb-8">Experiencia Sensorial Omnidireccional</p>
+              
+              <div className="flex items-center justify-center gap-4">
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border">
+                  <Radio className="w-4 w-4 text-primary" />
+                  <span className="text-sm">Binaural</span>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border">
+                  <Headphones className="w-4 h-4 text-primary" />
+                  <span className="text-sm">3D Audio</span>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  <span className="text-sm">Quantum FX</span>
+                </div>
+              </div>
+            </div>
+          </div>
 
-          <motion.div
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="flex gap-4"
-          >
-            {[
-              { icon: Radio, label: "Binaural" },
-              { icon: Headphones, label: "3D Audio" },
-              { icon: Sparkles, label: "Quantum FX" },
-            ].map((feature, i) => (
-              <motion.div
-                key={feature.label}
-                whileHover={{ scale: 1.1 }}
-                className="flex items-center gap-2 px-4 py-2 rounded-full glass-effect border border-primary/30"
+          {/* Player */}
+          <div className="p-8 rounded-2xl bg-card border border-border">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-foreground">Motor de Audio Quantum</h2>
+                <p className="text-muted-foreground">Experiencia inmersiva en tiempo real</p>
+              </div>
+              <Button
+                size="lg"
+                onClick={() => setIsPlaying(!isPlaying)}
+                className="rounded-full h-16 w-16"
               >
-                <feature.icon className="w-5 h-5 text-accent" />
-                <span className="text-sm font-medium">{feature.label}</span>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </motion.div>
+                {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6 ml-1" />}
+              </Button>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <Volume2 className="h-5 w-5 text-muted-foreground" />
+              <Slider
+                value={volume}
+                onValueChange={setVolume}
+                max={100}
+                step={1}
+                className="flex-1"
+              />
+              <span className="text-sm text-muted-foreground w-12">{volume}%</span>
+            </div>
+          </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 py-16 space-y-12">
-        {/* Audio Engine */}
-        <motion.div
-          initial={{ y: 50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.5 }}
-        >
-          <h2 className="text-4xl font-orbitron font-bold text-gradient-quantum mb-8 text-center">
-            Motor de Audio Quantum
-          </h2>
-          <KaosAudioFX />
-        </motion.div>
-
-        {/* Sensory FX Manager */}
-        <motion.div
-          initial={{ y: 50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.6 }}
-        >
-          <h2 className="text-4xl font-orbitron font-bold text-gradient-quantum mb-8 text-center">
-            Efectos Sensoriales
-          </h2>
-          <SensoryFXManager />
-        </motion.div>
-
-        {/* Audio Presets */}
-        <div>
-          <h2 className="text-4xl font-orbitron font-bold text-gradient-quantum mb-8 text-center">
-            Ambientes Preconfigurados
-          </h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              { name: "Meditación Quantum", mood: "calm", color: "from-calm to-resonance" },
-              { name: "Enfoque Creativo", mood: "energy", color: "from-energy to-primary" },
-              { name: "Celebración Épica", mood: "excitement", color: "from-accent to-secondary" },
-              { name: "Exploración 4D", mood: "wonder", color: "from-primary to-calm" },
-              { name: "Conexión Social", mood: "joy", color: "from-resonance to-energy" },
-              { name: "Descanso Profundo", mood: "peace", color: "from-secondary to-calm" },
-            ].map((preset, i) => (
-              <motion.div
-                key={preset.name}
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.7 + i * 0.1, type: "spring" }}
-                whileHover={{ scale: 1.05, y: -10 }}
-                className="cursor-pointer"
-              >
-                <Card className="p-6 glass-effect border-primary/20 relative overflow-hidden">
-                  <div className={`absolute inset-0 bg-gradient-to-br ${preset.color} opacity-10`} />
-                  <div className="relative z-10">
-                    <div className="w-16 h-16 rounded-full bg-gradient-quantum mb-4 flex items-center justify-center">
-                      <Music className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="text-xl font-orbitron font-bold mb-2">{preset.name}</h3>
-                    <p className="text-sm text-muted-foreground capitalize">{preset.mood}</p>
+          {/* Presets */}
+          <div>
+            <h2 className="text-2xl font-bold text-foreground mb-6">Ambientes Preconfigurados</h2>
+            <div className="grid md:grid-cols-3 gap-4">
+              {presets.map((preset) => (
+                <div
+                  key={preset.name}
+                  className="p-6 rounded-xl bg-card border border-border hover:border-primary/50 transition-all cursor-pointer hover:scale-105"
+                >
+                  <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${preset.color} flex items-center justify-center mb-4`}>
+                    <Music className="w-6 h-6 text-foreground" />
                   </div>
-                </Card>
-              </motion.div>
-            ))}
+                  <h3 className="font-semibold text-foreground">{preset.name}</h3>
+                  <p className="text-sm text-muted-foreground capitalize">{preset.mood}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </MainLayout>
   );
 }

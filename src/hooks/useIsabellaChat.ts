@@ -1,8 +1,10 @@
 import { useState, useCallback } from 'react';
 
 interface Message {
+  id: string;
   role: 'user' | 'assistant';
   content: string;
+  timestamp: Date;
 }
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/isabella-chat`;
@@ -12,26 +14,40 @@ export function useIsabellaChat() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const generateId = () => crypto.randomUUID();
+
   const sendMessage = useCallback(async (input: string) => {
     if (!input.trim()) return;
 
-    const userMsg: Message = { role: 'user', content: input };
+    const userMsg: Message = { 
+      id: generateId(), 
+      role: 'user', 
+      content: input,
+      timestamp: new Date()
+    };
     setMessages(prev => [...prev, userMsg]);
     setIsLoading(true);
     setError(null);
 
     let assistantContent = '';
+    const assistantId = generateId();
+    const assistantTimestamp = new Date();
 
     const updateAssistant = (chunk: string) => {
       assistantContent += chunk;
       setMessages(prev => {
         const last = prev[prev.length - 1];
-        if (last?.role === 'assistant') {
+        if (last?.role === 'assistant' && last.id === assistantId) {
           return prev.map((m, i) =>
             i === prev.length - 1 ? { ...m, content: assistantContent } : m
           );
         }
-        return [...prev, { role: 'assistant', content: assistantContent }];
+        return [...prev, { 
+          id: assistantId, 
+          role: 'assistant' as const, 
+          content: assistantContent,
+          timestamp: assistantTimestamp
+        }];
       });
     };
 
@@ -41,7 +57,7 @@ export function useIsabellaChat() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ messages: [...messages, userMsg] }),
+        body: JSON.stringify({ messages: [...messages, userMsg].map(m => ({ role: m.role, content: m.content })) }),
       });
 
       if (!resp.ok) {
@@ -105,7 +121,12 @@ export function useIsabellaChat() {
       setError(errorMessage);
       setMessages(prev => [
         ...prev,
-        { role: 'assistant', content: `Lo siento, hubo un error: ${errorMessage}` },
+        { 
+          id: generateId(), 
+          role: 'assistant', 
+          content: `Lo siento, hubo un error: ${errorMessage}`,
+          timestamp: new Date()
+        },
       ]);
     } finally {
       setIsLoading(false);
