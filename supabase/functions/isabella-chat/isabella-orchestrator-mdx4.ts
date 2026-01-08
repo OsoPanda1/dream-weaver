@@ -8,8 +8,8 @@
 import { createClient } from '@supabase/supabase-js';
 
 // --- 🔐 CONFIGURACIÓN DE SOBERANÍA ---
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
